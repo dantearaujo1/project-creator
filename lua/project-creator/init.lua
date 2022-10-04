@@ -63,32 +63,32 @@ M.create_menu = function()
     },
   }
 
-  -- local input_opts = {
-  --   position = {
-  --     row = "10%",
-  --     col = "50%",
-  --   },
-  --   size = {
-  --     width = 30,
-  --     height = 5,
-  --   },
-  --   border = {
-  --     padding = {
-  --       top = 2,
-  --       right = 3,
-  --       bottom = 2,
-  --       left = 3,
-  --     },
-  --     style = "rounded",
-  --     text = {
-  --       top = " Name of your project: ",
-  --       top_align = "center",
-  --     },
-  --   },
-  --   win_options = {
-  --     winhighlight = "Normal:Normal,FloatBorder:FloatNormal",
-  --   },
-  -- }
+  local input_opts = {
+    position = {
+      row = "10%",
+      col = "50%",
+    },
+    size = {
+      width = 30,
+      height = 5,
+    },
+    border = {
+      padding = {
+        top = 2,
+        right = 3,
+        bottom = 2,
+        left = 3,
+      },
+      style = "rounded",
+      text = {
+        top = " Name of your project: ",
+        top_align = "center",
+      },
+    },
+    win_options = {
+      winhighlight = "Normal:Normal,FloatBorder:FloatNormal",
+    },
+  }
 
   local menu = Menu(
     menu_opts,
@@ -98,12 +98,16 @@ M.create_menu = function()
       on_close = function()
         print("Menu Closed!")
       end,
-      -- on_submit = function(item)
-      --   if item.text == "Processing" then
-      --       local nmenu = Input(input_opts,{ lines ={}, on_close = {}, on_submit = {}})
-      --       nmenu:mount()
-      --   end
-      -- end
+      on_submit = function(item)
+        if item.text == "Processing" then
+          local nmenu = Input(input_opts,{ lines ={}, on_close = {}, on_submit =
+            function(project)
+              vim.api.nvim_command(":! mkdir -p " .. M.creation_table.projects.processing.workspace .. "/" .. project )
+            end
+          })
+          nmenu:mount()
+        end
+      end
   })
   menu:mount()
 end
