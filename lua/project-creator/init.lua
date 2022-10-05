@@ -60,6 +60,7 @@ local input_opts = {
 }
 
 M.creation_table = {}
+
 M.setup = function(opts)
   M.creation_table.projects = opts
 end
@@ -67,67 +68,71 @@ end
 M.setup({
   processing = {
     workspace = "~/dev/projects/processing",
-    cmd = "mkdir"
+    cmd = "mkdir",
+    structure = {
+    }
   },
   cpp_sfml = {
     workspace = "~/dev/projects/cpp",
-    cmd = "mkdir"
+    cmd = "mkdir -p",
+    structure = {
+      src = {"main.cpp"},
+    }
   },
 })
 
-M.first_upperCase = function(s)
+local first_upperCase = function(s)
   return (s:sub(1,1):upper() .. s:sub(2,string.len(s)))
 end
 
--- M.creation_table = {
---   cmd = "! mkdir -p ",
---   projects = {
---     processing = {
---       workspace = "~/dev/projects/processing",
---       cmd = "mkdir -p "
---     },
---     cpp = {
---       workspace = "~/dev/projects/cpp/",
---     },
---   },
--- }
-
-M._items = {}
-
-M.create_items = function()
+local get_structure = function (project_config)
   for k, _ in pairs(M.creation_table.projects) do
-    table.insert(M._items,k)
+    if k == project_config then
+      return M.creation_table.projects[project_config].structure
+    end
+  end
+  return nil
+end
+
+local create_files = function(folder)
+  for _, file in ipairs(folder) do
+    vim.api.nvim_command(":! touch " .. file)
+  end
+  vim.api.nvim_command(":cd .. ")
+end
+
+local create_paths = function(project_table, project_name)
+  local structure = project_table.structure
+  local path = project_table.workspace .. "/" .. project_name
+
+  vim.api.nvim_command(":! " .. project_table.cmd .. " " .. path)
+  vim.api.nvim_command(":! cd " .. path )
+
+  for k, v in pairs(structure) do
+    vim.api.nvim_command(":! " .. project_table.cmd .. " " .. path .. "/" .. k)
+    vim.api.nvim_command(":cd " .. path .. "/" .. k)
+    -- vim.api.nvim_command(":! cd " .. k )
+    create_files(structure[k])
   end
 end
 
-M.create_menu = function()
-  local item_list = {}
 
-  for _, v in pairs(M._items) do
-    table.insert(item_list,Menu.item(M.first_upperCase(v)))
+local items = {}
+
+local create_items = function()
+  for k, _ in pairs(M.creation_table.projects) do
+    table.insert(items,k)
   end
-
-  local menu = Menu(
-    menu_opts,
-    {
-      lines = item_list,
-      max_width = 30,
-      on_close = function()
-        print("Menu Closed!")
-      end,
-      on_submit = M._on_submit_menu
-  })
-  menu:mount()
 end
 
-M._on_submit_menu = function(item)
+local on_submit_menu = function(item)
 
   local type = ""
 
-  for k,v in pairs(M.creation_table.projects) do
+  for k,_ in pairs(M.creation_table.projects) do
 
-    if item.text == M.first_upperCase(k) then
-      type = M.first_upperCase(k)
+    if item.text == first_upperCase(k) then
+      type = first_upperCase(k)
     end
 
   end
@@ -141,8 +146,9 @@ M._on_submit_menu = function(item)
           function(project_name)
             local project_table = M.creation_table.projects[string.lower(type)]
             local path = project_table.workspace .. "/" .. project_name
-            vim.api.nvim_command(":! " .. project_table.cmd .. " " .. path)
-            vim.api.nvim_command(":! cd " .. path .. " && touch " .. project_name .. ".pde" )
+            create_paths(project_table,project_name)
+            -- vim.api.nvim_command(":! " .. project_table.cmd .. " " .. path)
+            -- vim.api.nvim_command(":! cd " .. path .. " && touch " .. project_name .. ".pde" )
           end
     })
     nmenu:mount()
@@ -150,7 +156,28 @@ M._on_submit_menu = function(item)
   end
 end
 
-M.create_items()
+M.create_menu = function()
+  local item_list = {}
+
+  for _, v in pairs(items) do
+    table.insert(item_list,Menu.item(first_upperCase(v)))
+  end
+
+  local menu = Menu(
+    menu_opts,
+    {
+      lines = item_list,
+      max_width = 30,
+      on_close = function()
+        print("Menu Closed!")
+      end,
+      on_submit = on_submit_menu
+  })
+  menu:mount()
+end
+
+
+create_items()
 
 
 return M
