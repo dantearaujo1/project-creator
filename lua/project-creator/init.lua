@@ -1,5 +1,6 @@
 local Menu = require("nui.menu")
 local Input = require("nui.input")
+local utils = require'utils'
 
 local M = {}
 
@@ -68,8 +69,8 @@ end
 M.setup({
   processing = {
     workspace = "~/dev/projects/processing",
-    cmd = "mkdir",
     structure = {
+      root = {}
     }
   },
   cpp_sfml = {
@@ -77,6 +78,8 @@ M.setup({
     cmd = "mkdir -p",
     structure = {
       src = {"main.cpp"},
+      build = {},
+      assets = {}
     }
   },
 })
@@ -104,12 +107,18 @@ end
 local create_paths = function(project_table, project_name)
   local structure = project_table.structure
   local path = project_table.workspace .. "/" .. project_name
+  local command = ""
 
-  vim.api.nvim_command(":! " .. project_table.cmd .. " " .. path)
+  if utils.getOS() == 'Linux' then
+    command = "mkdir -p" .. " " .. path
+  else
+    command = "mkdir \"" .. path .. "\""
+  end
+  vim.api.nvim_command(":! ".. command)
   vim.api.nvim_command(":! cd " .. path )
 
   for k, v in pairs(structure) do
-    vim.api.nvim_command(":! " .. project_table.cmd .. " " .. path .. "/" .. k)
+    vim.api.nvim_command(":! "  ..command .. "/" .. k)
     vim.api.nvim_command(":cd " .. path .. "/" .. k)
     -- vim.api.nvim_command(":! cd " .. k )
     create_files(structure[k])
