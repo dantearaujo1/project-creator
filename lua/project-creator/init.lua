@@ -75,7 +75,6 @@ M.setup({
   },
   cpp_sfml = {
     workspace = "~/dev/projects/cpp",
-    cmd = "mkdir -p",
     structure = {
       src = {"main.cpp"},
       build = {},
@@ -151,6 +150,9 @@ local on_submit_menu = function(item)
     local nmenu = Input(input_opts,
     {
         lines ={},
+        keymap = {
+          close = {"<Esc>", "<C-c>","q"}
+        },
         on_submit =
           function(project_name)
             local project_table = M.creation_table.projects[string.lower(type)]
@@ -177,6 +179,9 @@ M.create_menu = function()
     {
       lines = item_list,
       max_width = 30,
+      keymap = {
+        close = {"<Esc>", "<C-c>"}
+      },
       on_close = function()
         print("Menu Closed!")
       end,
